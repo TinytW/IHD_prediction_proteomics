@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from PIL import Image
 
 # =============================================
 # Page Configuration
@@ -181,7 +182,7 @@ if selected_section == "🏠 Home":
         with metrics_col1:
             st.metric("Selected Proteins", "260", "from 2,923")
         with metrics_col2:
-            st.metric("Model Performance", "C-index: 0.704", "95% CI: 0.680-0.727")
+            st.metric("Model C-index", "0.704", "95% CI: 0.680-0.727")
         with metrics_col3:
             st.metric("Sample Size", "3,977", "2,189 IHD cases")
         
@@ -344,7 +345,7 @@ elif selected_section == "📊 2. Data & Methods":
         """)
     
     # Code example for data loading
-    st.markdown("#### Data Loading Example")
+    st.markdown("#### Python Code for Data Loading")
     st.markdown('<div class="code-block">', unsafe_allow_html=True)
     st.code("""
 # Load basic information dataset
@@ -409,22 +410,8 @@ print(f"Selected {len(valid_proteins)} proteins")
 # Missing rates - Min: 0.23%, Max: 3.97%, Mean: 1.73%
 # Selected 2923 proteins
 """, language='python')
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Missing rate visualization
-    st.markdown("#### Missing Rate Distribution")
-    fig, ax = plt.subplots(figsize=(10, 4))
-    np.random.seed(42)
-    missing_rates_sim = np.random.beta(2, 100, 2923) * 0.04
-    ax.hist(missing_rates_sim * 100, bins=30, edgecolor='black', alpha=0.7)
-    ax.axvline(30, color='red', linestyle='--', label='30% cutoff')
-    ax.set_xlabel('Missing Rate (%)')
-    ax.set_ylabel('Number of Proteins')
-    ax.set_title('Distribution of Protein Missing Rates')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    st.pyplot(fig)
-    
+    st.markdown('</div>', unsafe_allow_html=True)    
+
     st.markdown("### 3.3 Data Integration")
     st.write("""
     Demographic, endpoint, and proteomics data were merged by individual ID. 
@@ -597,37 +584,7 @@ print(f'FDR significant (FDR<0.05): {len(significant_proteins)}')
         st.metric("FDR Significant", "397", "FDR < 0.05")
     
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Volcano plot
-    st.markdown("#### Volcano Plot: Protein Associations")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    np.random.seed(42)
-    
-    # Simulate data
-    n_proteins = 2923
-    log_p_values = -np.log10(np.random.beta(0.5, 5, n_proteins))
-    effect_sizes = np.random.randn(n_proteins) * 0.5
-    
-    # Simulate significant proteins
-    significant_idx = np.random.choice(n_proteins, 397, replace=False)
-    non_sig_idx = np.setdiff1d(np.arange(n_proteins), significant_idx)
-    
-    # Plot
-    ax.scatter(effect_sizes[non_sig_idx], log_p_values[non_sig_idx], 
-               alpha=0.5, s=20, color='gray', label='Non-significant')
-    ax.scatter(effect_sizes[significant_idx], log_p_values[significant_idx], 
-               alpha=0.7, s=30, color='red', label='FDR < 0.05')
-    
-    ax.axhline(-np.log10(0.05), color='blue', linestyle='--', alpha=0.7, label='P = 0.05')
-    ax.axhline(-np.log10(0.05/2923), color='green', linestyle='--', alpha=0.7, label='Bonferroni')
-    
-    ax.set_xlabel('Effect Size (Standardized Coefficient)')
-    ax.set_ylabel('-log₁₀(P-value)')
-    ax.set_title('Volcano Plot: Protein Associations with IHD Risk')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    
-    st.pyplot(fig)
+
 
 # ====================
 # 4.2 LASSO-Cox
@@ -705,35 +662,6 @@ print(f"Selected proteins: {len(selected_proteins)}")
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # LASSO path visualization
-    st.markdown("#### LASSO Coefficient Paths")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    # Simulate LASSO paths
-    n_features = 397
-    n_alphas = 10
-    alphas = np.logspace(-3, 0, n_alphas)
-    
-    np.random.seed(42)
-    coefs = np.zeros((n_alphas, n_features))
-    
-    # Create realistic coefficient paths
-    for i, alpha in enumerate(alphas):
-        coefs[i, :] = np.random.randn(n_features) * np.exp(-alpha * 3)
-    
-    # Plot paths
-    for j in range(min(20, n_features)):
-        ax.plot(alphas, coefs[:, j], linewidth=1.5, alpha=0.7)
-    
-    ax.set_xscale('log')
-    ax.set_xlabel('Regularization Parameter (α)')
-    ax.set_ylabel('Coefficient Value')
-    ax.set_title('LASSO Coefficient Paths (First 20 Proteins)')
-    ax.grid(True, alpha=0.3)
-    ax.axvline(0.01, color='red', linestyle='--', label='Selected α = 0.01')
-    ax.legend()
-    
-    st.pyplot(fig)
 
 # ====================
 # 5. Model Construction
@@ -785,39 +713,6 @@ risk_scores_test = np.dot(X_test_selected, coefficients)
     - $X_i$ is the standardized expression level (Z-score) of protein $i$
     """)
     
-    # Coefficient distribution
-    st.markdown("#### Coefficient Distribution")
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    
-    # Simulate coefficient distribution
-    np.random.seed(42)
-    n_proteins = 260
-    coefficients = np.random.randn(n_proteins) * 0.3
-    
-    # Make some positive, some negative
-    coefficients[:200] = np.abs(coefficients[:200])
-    coefficients[200:] = -np.abs(coefficients[200:])
-    
-    # Coefficient histogram
-    ax1.hist(coefficients, bins=30, edgecolor='black', alpha=0.7)
-    ax1.axvline(0, color='red', linestyle='--', alpha=0.7)
-    ax1.set_xlabel('Coefficient Value')
-    ax1.set_ylabel('Frequency')
-    ax1.set_title('Distribution of Protein Coefficients')
-    ax1.grid(True, alpha=0.3)
-    
-    # Hazard ratio distribution
-    hazard_ratios = np.exp(coefficients)
-    ax2.hist(hazard_ratios, bins=30, edgecolor='black', alpha=0.7, color='green')
-    ax2.axvline(1, color='red', linestyle='--', alpha=0.7, label='HR = 1 (no effect)')
-    ax2.set_xlabel('Hazard Ratio (HR)')
-    ax2.set_ylabel('Frequency')
-    ax2.set_title('Distribution of Hazard Ratios')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-    
-    st.pyplot(fig)
-    
     # Model summary
     st.markdown("#### Final Model Summary")
     model_summary = pd.DataFrame({
@@ -847,98 +742,24 @@ elif selected_section == "📊 6. Model Evaluation":
     with col1:
         st.metric("C-index", "0.704", "95% CI: 0.680-0.727")
     with col2:
-        st.metric("10-year AUC", "0.766")
+        st.metric("5-year AUC", "0.727")
     with col3:
-        st.metric("Brier Score", "0.199")
-    
-    # Time-dependent AUC
-    st.markdown("#### Time-dependent AUC")
-    auc_table = pd.DataFrame({
-        "Time Point": ["3-year", "5-year", "10-year"],
-        "AUC": [0.703, 0.727, 0.766],
-        "Interpretation": ["Good", "Good", "Excellent"]
-    })
-    
-    st.table(auc_table)
+        st.metric("10-year AUC", "0.766")
     
     # ROC curves
     st.markdown("#### ROC Curves")
-    fig, ax = plt.subplots(figsize=(10, 7))
-    
-    # Simulate ROC curves
-    time_points = [3, 5, 10]
-    auc_values = [0.703, 0.727, 0.766]
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
-    
-    for t, auc, color in zip(time_points, auc_values, colors):
-        fpr = np.linspace(0, 1, 100)
-        k = auc / (1 - auc)
-        tpr = 1 - np.power(1 - fpr, 1/k)
-        
-        ax.plot(fpr, tpr, color=color, lw=2, 
-                label=f'{t}-year (AUC = {auc:.3f})')
-    
-    ax.plot([0, 1], [0, 1], 'k--', alpha=0.5, label='Random (AUC = 0.5)')
-    ax.set_xlim([0.0, 1.0])
-    ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel('False Positive Rate')
-    ax.set_ylabel('True Positive Rate')
-    ax.set_title('Time-dependent ROC Curves')
-    ax.legend(loc='lower right')
-    ax.grid(True, alpha=0.3)
-    
-    st.pyplot(fig)
+    roc_image = Image.open('images/Fig1.AUC.png')
+    st.image(roc_image, caption='Time-dependent ROC Curves', use_column_width=True)
     
     # Calibration
     st.markdown("### Calibration")
+    roc_image = Image.open('images/Fig2.Calibration.png')
+    st.image(roc_image, caption='Calibration plot of the model', use_column_width=True)
     
-    st.markdown("#### 10-year Calibration Plot")
-    fig, ax = plt.subplots(figsize=(8, 7))
-    
-    # Simulate calibration data
-    np.random.seed(42)
-    pred_risk = np.linspace(0.1, 0.8, 10)
-    actual_risk = pred_risk + np.random.randn(10) * 0.05
-    actual_risk = np.clip(actual_risk, 0, 0.9)
-    
-    ax.plot(pred_risk, actual_risk, 'o-', color='#d62728', 
-            lw=2, markersize=8, label='Calibration curve')
-    ax.plot([0, 1], [0, 1], 'k-', alpha=0.5, label='Perfect calibration')
-    
-    ax.errorbar(pred_risk, actual_risk, yerr=np.abs(actual_risk - pred_risk)*0.5, 
-                fmt='o', color='#d62728', alpha=0.5)
-    
-    ax.set_xlim([0.0, 1.0])
-    ax.set_ylim([0.0, 1.0])
-    ax.set_xlabel('Predicted 10-year Risk')
-    ax.set_ylabel('Observed 10-year Risk')
-    ax.set_title('10-year Risk Calibration')
-    ax.legend(loc='upper left')
-    ax.grid(True, alpha=0.3)
-    
-    # Add Brier score
-    brier_score = 0.199
-    ax.text(0.05, 0.85, f'Brier score = {brier_score:.3f}',
-            transform=ax.transAxes, fontsize=11,
-            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-    
-    st.pyplot(fig)
-    
-    # Brier score interpretation
-    st.markdown("#### Brier Score Interpretation")
-    brier_info = pd.DataFrame({
-        "Brier Score": ["0.0-0.1", "0.1-0.2", "0.2-0.3", "0.3-0.4", "0.4-1.0"],
-        "Calibration Quality": ["Excellent", "Good", "Acceptable", "Poor", "Very poor"],
-        "Description": [
-            "High agreement between predicted and observed",
-            "Good agreement between predicted and observed",
-            "Acceptable but needs improvement",
-            "Low predictive accuracy",
-            "Almost no predictive value"
-        ]
-    })
-    
-    st.table(brier_info)
+    # Top 20 Proteins
+    st.markdown("### Top 20 Proteins")
+    roc_image = Image.open('Fig3.protein_importance.png')
+    st.image(roc_image, caption='Protein importance of the top 20 proteins', use_column_width=True)
 
 # ====================
 # 7. Summary
@@ -966,42 +787,6 @@ elif selected_section == "📋 7. Summary":
     
     for finding in findings:
         st.markdown(finding)
-    
-    st.markdown("### Strengths")
-    
-    strengths = [
-        "• **Large prospective cohort**: CKB with 512,724 participants",
-        "• **Comprehensive proteomics**: 2,923 plasma proteins measured",
-        "• **Rigorous statistical methods**: Two-stage feature selection with FDR correction",
-        "• **Independent validation**: Test set performance evaluation",
-        "• **Clinical relevance**: Included established and novel biomarkers"
-    ]
-    
-    for strength in strengths:
-        st.markdown(strength)
-    
-    st.markdown("### Limitations")
-    
-    limitations = [
-        "• **Single timepoint measurement**: Baseline proteins only, no longitudinal data",
-        "• **External validation needed**: Performance in other populations requires testing",
-        "• **Measurement costs**: Clinical implementation of 260 proteins may be costly",
-        "• **Mechanistic insights limited**: Association does not imply causation"
-    ]
-    
-    for limitation in limitations:
-        st.markdown(limitation)
-    
-    st.markdown("### Conclusions")
-    
-    st.write("""
-    This study successfully developed a plasma proteomics-based risk prediction 
-    model for IHD. The model demonstrates good discrimination and calibration, 
-    providing a novel tool for early identification of high-risk individuals. 
-    The identified protein biomarkers offer insights into the biological 
-    pathways involved in IHD pathogenesis and may guide future mechanistic 
-    studies and clinical applications.
-    """)
 
 # ====================
 # About Author
