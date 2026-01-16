@@ -709,7 +709,7 @@ risk_scores_test = np.dot(X_test_selected, coefficients)
     
     st.write("""
     where:
-    - $\beta_i$ is the coefficient for protein $i$ (from Cox model)
+    - $beta_i$ is the coefficient for protein $i$ (from Cox model)
     - $X_i$ is the standardized expression level (Z-score) of protein $i$
     """)
     
@@ -748,12 +748,12 @@ elif selected_section == "📊 6. Model Evaluation":
     
     # ROC curves
     st.markdown("#### ROC Curves")
-    roc_image = Image.open('images/Fig1.AUC.png')
+    roc_image = Image.open('Fig1.AUC.png')
     st.image(roc_image, caption='Time-dependent ROC Curves', use_column_width=True)
     
     # Calibration
     st.markdown("### Calibration")
-    roc_image = Image.open('images/Fig2.Calibration.png')
+    roc_image = Image.open('Fig2.Calibration.png')
     st.image(roc_image, caption='Calibration plot of the model', use_column_width=True)
     
     # Top 20 Proteins
@@ -802,7 +802,7 @@ elif selected_section == "👩‍🎓 About Author":
             <div style="width: 150px; height: 150px; background-color: #e5e7eb; 
                         border-radius: 50%; margin: 0 auto 20px auto;"></div>
             <h3>Ting Wu</h3>
-            <p>PhD cDandidate</p>
+            <p>PhD Candidate</p>
         </div>
         """, unsafe_allow_html=True)
     
